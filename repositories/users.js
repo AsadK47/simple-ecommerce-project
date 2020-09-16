@@ -26,7 +26,7 @@ class UsersRespository {
     const records = await this.getAll();
     records.push(attrs);
 
-    await this.writeAll(records, jsonLength);
+    await this.writeAll(records);
   }
 
   async writeAll(records) {
@@ -48,16 +48,44 @@ class UsersRespository {
 
     await this.writeAll(filteredRecords);
   }
+
+  async update(id, attrs) {
+    const records = await this.getAll();
+    const record = records.find(record => record.id === id);
+
+    if (!record) {
+      throw new Error(`Record with id ${id} not found`);
+    }
+
+    Object.assign(record, attrs);
+    await this.writeAll(records);
+  }
+
+  async getOneBy(filters) {
+    const records = await this.getAll();
+
+    for (let record of records) {
+      let found = true;
+
+      for (let key in filters) {
+        if (record[key] !== filters[key]) {
+          found = false;
+        }
+      }
+
+      if (found) {
+        return record;
+      }
+    }
+  }
 }
 
 const test = async () => {
   const repo = new UsersRespository("users.json");
 
-  const user = await repo.delete("3085a284");
+  const user = await repo.getOneBy({ email: "test@test.com", password: "password" });
 
-  const records = await repo.getAll();
-
-  console.log(records);
+  console.log(user);
 }
 
 test();
